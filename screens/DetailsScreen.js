@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GOOGLE_API_KEY } from '../constants/Config';
+
+// OpenRouter API key (provided by user)
+const OPENROUTER_API_KEY = "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";
 
 export default function DetailsScreen({ route }) {
   const { location } = route.params;
@@ -9,13 +11,10 @@ export default function DetailsScreen({ route }) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleBookPress = () => {
-    // WhatsApp link format: https://wa.me/<number>?text=<message>
-    // Using a dummy number for the hackathon
-    const phoneNumber = '40700000000'; 
+    const phoneNumber = '40700000000';
     const message = `Hello! I would like to make a reservation at ${location.name}.`;
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    
-    Linking.canOpenURL(url).then(supported => {
+    Linking.canOpenURL(url).then((supported) => {
       if (supported) {
         Linking.openURL(url);
       } else {
@@ -26,34 +25,42 @@ export default function DetailsScreen({ route }) {
 
   const handleGenerateVibe = async () => {
     setIsGenerating(true);
-    
-    try {
-      const prompt = `Write a short, creative, and "vibe-focused" description (max 50 words) for a place called "${location.name}". 
-      Original description: "${location.short_description}". 
-      Make it sound inviting, modern, and fun. Use emojis.`;
+    const prompt = `You are a local Romanian tourism expert. Write a detailed, engaging description (100-150 words) for "${location.name}" located at ${location.address}.
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: prompt }]
-            }]
-          })
-        }
-      );
+Include specific details about:
+- Signature dishes or menu highlights (if it's a restaurant/cafe)
+- Coffee quality and specialty drinks (if applicable)
+- Service quality and staff friendliness
+- Ambiance and atmosphere
+- Best times to visit
+- What makes this place unique and special
+- Popular items or experiences visitors shouldn't miss
+
+Make it sound authentic, inviting, and use a friendly, enthusiastic tone. Add relevant emojis to make it more engaging. Focus on creating a "vibe" that makes people want to visit.
+
+Current description: "${location.short_description}"`;
+
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+          'X-Title': 'AI-Hackathon-App',
+        },
+        body: JSON.stringify({
+          model: 'openrouter/mistralai/mistral-nemo',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+        }),
+      });
 
       const data = await response.json();
-
-      if (data.candidates && data.candidates[0].content.parts[0].text) {
-        setDescription(data.candidates[0].content.parts[0].text);
+      if (response.ok && data.choices && data.choices[0] && data.choices[0].message) {
+        setDescription(data.choices[0].message.content.trim());
       } else {
         Alert.alert('Error', 'Could not generate description. Please try again.');
-        console.error('Gemini API Error:', data);
+        console.error('OpenRouter API Error:', data);
       }
     } catch (error) {
       Alert.alert('Error', 'Network error or API issue.');
@@ -66,7 +73,6 @@ export default function DetailsScreen({ route }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Image source={{ uri: location.image_url }} style={styles.image} />
-      
       <View style={styles.detailsContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.name}>{location.name}</Text>
@@ -75,19 +81,15 @@ export default function DetailsScreen({ route }) {
             <Text style={styles.rating}>{location.rating}</Text>
           </View>
         </View>
-        
         <View style={styles.locationRow}>
           <Ionicons name="location-outline" size={20} color="#666" />
           <Text style={styles.address}>{location.address}</Text>
         </View>
-
         <View style={styles.divider} />
-
         <Text style={styles.sectionTitle}>About</Text>
         <Text style={styles.description}>{description}</Text>
-
-        <TouchableOpacity 
-          style={[styles.aiButton, isGenerating && styles.aiButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.aiButton, isGenerating && styles.aiButtonDisabled]}
           onPress={handleGenerateVibe}
           disabled={isGenerating}
         >
@@ -100,9 +102,7 @@ export default function DetailsScreen({ route }) {
             </>
           )}
         </TouchableOpacity>
-
         <View style={styles.divider} />
-
         <TouchableOpacity style={styles.bookButton} onPress={handleBookPress}>
           <Ionicons name="logo-whatsapp" size={24} color="white" style={{ marginRight: 8 }} />
           <Text style={styles.bookButtonText}>Book via WhatsApp</Text>
