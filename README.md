@@ -1,50 +1,28 @@
-# Welcome to your Expo app 👋
+# AI Hackathon Project
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Descriere
 
-## Get started
+**AI Hackathon Project** este un prototip dezvoltat într-un hackathon de inteligență artificială. Scopul este să demonstreze o soluție bazată pe AI care răspunde la o nevoie reală: fie un chatbot inteligent, un sistem de generare de conținut, un motor de recomandare, sau o platformă de asistență. Proiectul combină procesare a limbajului natural, căutare semantică și generare pentru a oferi răspunsuri utile și relevante.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## Caracteristici principale
 
-2. Start the app
+- **Răspuns AI** — Folosește un model de limbaj (ex: GPT, Llama, alt LLM) pentru generare de text sau răspunsuri la întrebări.  
+- **Căutare vectorială / RAG** — Indexează documente și le recuperează semantic pentru a le folosi în generare.  
+- **Interfață web** — UI simplu pentru utilizatori, poate fi o pagină web (React, Flask, etc.).  
+- **API** — Endpoint-uri REST sau alt tip pentru integrare externă.  
+- **Stocare** — Bază de date sau fișiere pentru conversații, embeddings, documente.  
+- **Persistență și configurare** — Variabile de mediu, fișier `.env` pentru chei și setări.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## Tehnologii folosite
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- **Limbaj de programare**: Python  
+- **Librării AI**: `transformers`, `langchain` (sau altele, după ce folosești tu)  
+- **Vector database**: FAISS / Qdrant / altele  
+- **Backend web**: Flask / FastAPI / Django  
+- **Frontend** (opțional): React / Vue / alte framework-uri  
+- **Bază de date**: SQLite / PostgreSQL / altele  
+- **Altele**: Docker (pentru containerizare), dotenv (pentru gestionarea configurării), Git
