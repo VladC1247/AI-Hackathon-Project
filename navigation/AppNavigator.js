@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
-// Importă ecranele (presupunem ca acestea exista in screens/)
+// Screens
 import HomeScreen from '../screens/HomeScreen';
 import DetailsScreen from '../screens/DetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -11,29 +11,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Stack Navigator pentru ecranul Explore
-function ExploreStack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="ExploreHome" 
-        component={HomeScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="Details" 
-        component={DetailsScreen} 
-        options={{ 
-            title: 'Detalii Locație', 
-            headerBackTitle: 'Înapoi'
-        }} 
-      />
-    </Stack.Navigator>
-  );
-}
-
-// Tab Navigator (Meniul de Jos)
-export default function AppNavigator() {
+function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -41,28 +19,40 @@ export default function AppNavigator() {
           let iconName;
 
           if (route.name === 'Explore') {
-            iconName = focused ? 'compass' : 'compass-outline'; 
+            iconName = focused ? 'map' : 'map-outline';
           } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline'; 
+            iconName = focused ? 'person' : 'person-outline';
           }
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#007AFF', 
+        tabBarActiveTintColor: '#2196F3',
         tabBarInactiveTintColor: 'gray',
-        headerShown: false, 
+        headerShown: false,
       })}
     >
-      <Tab.Screen 
-        name="Explore" 
-        component={ExploreStack} 
-        options={{ title: 'Explorează' }} 
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ title: 'Contul Meu' }} 
-      />
+      <Tab.Screen name="Explore" component={HomeScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+  );
+}
+
+export default function AppNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="Main" 
+        component={MainTabs} 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="Details" 
+        component={DetailsScreen} 
+        options={{ 
+          title: 'Location Details',
+          headerBackTitleVisible: false,
+        }} 
+      />
+    </Stack.Navigator>
   );
 }

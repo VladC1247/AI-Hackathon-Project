@@ -1,181 +1,234 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, Linking, Button, ActivityIndicator, Dimensions, Alert } from 'react-native';
-import LocationsData from '../data/locatii.json';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { generateVibe } from '../utils/ai-service'; 
-import { getStatusBarHeight } from 'react-native-safe-area-context';
+import { GOOGLE_API_KEY } from '../constants/Config';
 
-const { width } = Dimensions.get('window');
+export default function DetailsScreen({ route }) {
+  const { location } = route.params;
+  const [description, setDescription] = useState(location.short_description);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-const DetailsScreen = ({ route }) => {
-  const { locationId } = route.params; 
-  
-  // LOGICA: Găsirea locației prin ID (replică logica de adăugare ID din HomeScreen)
-  const location = LocationsData.map((loc, index) => ({
-      ...loc,
-      id: (index + 1).toString(), // Adaugă ID-ul la fel ca în HomeScreen
-  })).find(loc => loc.id === locationId);
-
-  const [currentDescription, setCurrentDescription] = useState(location ? location.short_description : '');
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
-
-  useEffect(() => {
-      if (location) {
-          setCurrentDescription(location.short_description);
+  const handleBookPress = () => {
+    // WhatsApp link format: https://wa.me/<number>?text=<message>
+    // Using a dummy number for the hackathon
+    const phoneNumber = '40700000000'; 
+    const message = `Hello! I would like to make a reservation at ${location.name}.`;
+    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'WhatsApp is not installed or cannot be opened.');
       }
-  }, [locationId]);
-
-  // Funcție de navigare WhatsApp
-  const handleReserve = () => {
-    const url = `whatsapp://send?phone=0722123456&text=Buna ziua, doresc o rezervare la ${location.name}.`;
-    Linking.openURL(url).catch(() => {
-        Alert.alert("Eroare", "Vă rugăm să instalați aplicația WhatsApp.");
     });
   };
 
-  // Functia pentru AI Magic (Generarea Vibe-ului)
   const handleGenerateVibe = async () => {
-    if (isLoadingAI) return;
-    setIsLoadingAI(true);
+    setIsGenerating(true);
     
-    const newVibe = await generateVibe(location.name, location.short_description);
-    
-    if (newVibe && !newVibe.includes("Eroare")) {
-        setCurrentDescription(newVibe);
-    } else {
-        Alert.alert("Eroare AI", newVibe); 
+    try {
+      const prompt = `Write a short, creative, and "vibe-focused" description (max 50 words) for a place called "${location.name}". 
+      Original description: "${location.short_description}". 
+      Make it sound inviting, modern, and fun. Use emojis.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: prompt }]
+            }]
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        setDescription(data.candidates[0].content.parts[0].text);
+      } else {
+        Alert.alert('Error', 'Could not generate description. Please try again.');
+        console.error('Gemini API Error:', data);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Network error or API issue.');
+      console.error('Generate Vibe Error:', error);
+    } finally {
+      setIsGenerating(false);
     }
-    setIsLoadingAI(false);
   };
-  
-  if (!location) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text>Locația nu a fost găsită.</Text>
-      </View>
-    );
-  }
 
   return (
-    <ScrollView style={styles.container}>
-      <Image 
-        source={{ uri: location.image_url }} 
-        style={styles.image} 
-      />
-
-      <View style={styles.detailsBox}>
-        <Text style={styles.name}>{location.name}</Text>
-        
-        <View style={styles.ratingRow}>
-            <Ionicons name="star" size={20} color="#FFC107" />
-            <Text style={styles.ratingText}>{location.rating.toFixed(1)} / 5</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-            <Ionicons name="location-outline" size={18} color="#666" style={{marginRight: 5}} />
-            <Text style={styles.address}>{location.address}</Text>
-        </View>
-
-        {/* Butonul AI Magic */}
-        <View style={styles.buttonContainer}>
-            <Button 
-                title={isLoadingAI ? "Se Generează Vibe..." : "✨ Generează Descriere Vibe (AI Magic)"} 
-                onPress={handleGenerateVibe} 
-                disabled={isLoadingAI}
-                color={isLoadingAI ? 'gray' : '#007AFF'}
-            />
-            
-            {isLoadingAI && <ActivityIndicator size="small" color="#007AFF" style={{marginTop: 10}} />}
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <Image source={{ uri: location.image_url }} style={styles.image} />
+      
+      <View style={styles.detailsContainer}>
+        <View style={styles.headerRow}>
+          <Text style={styles.name}>{location.name}</Text>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={20} color="#FFD700" />
+            <Text style={styles.rating}>{location.rating}</Text>
+          </View>
         </View>
         
-        {/* Descriere */}
-        <Text style={styles.sectionTitle}>Descriere Vibe</Text>
-        <Text style={styles.description}>{currentDescription}</Text>
-        
-        <View style={styles.reserveButton}>
-            {/* Buton Rezervă (WhatsApp) */}
-            <Button 
-                title="📲 Rezervă (WhatsApp)" 
-                onPress={handleReserve} 
-                color="#25D366" // Verde WhatsApp
-            />
+        <View style={styles.locationRow}>
+          <Ionicons name="location-outline" size={20} color="#666" />
+          <Text style={styles.address}>{location.address}</Text>
         </View>
+
+        <View style={styles.divider} />
+
+        <Text style={styles.sectionTitle}>About</Text>
+        <Text style={styles.description}>{description}</Text>
+
+        <TouchableOpacity 
+          style={[styles.aiButton, isGenerating && styles.aiButtonDisabled]} 
+          onPress={handleGenerateVibe}
+          disabled={isGenerating}
+        >
+          {isGenerating ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <>
+              <Ionicons name="sparkles" size={20} color="white" style={{ marginRight: 8 }} />
+              <Text style={styles.aiButtonText}>Generate Vibe Description</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.divider} />
+
+        <TouchableOpacity style={styles.bookButton} onPress={handleBookPress}>
+          <Ionicons name="logo-whatsapp" size={24} color="white" style={{ marginRight: 8 }} />
+          <Text style={styles.bookButtonText}>Book via WhatsApp</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
   },
-  loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingTop: getStatusBarHeight(),
+  contentContainer: {
+    paddingBottom: 40,
   },
   image: {
-    width: width,
-    height: width * 0.7, 
+    width: '100%',
+    height: 250,
+    resizeMode: 'cover',
   },
-  detailsBox: {
+  detailsContainer: {
     padding: 20,
-    marginTop: -20, 
+    marginTop: -20,
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   name: {
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 10,
+    color: '#333',
+    flex: 1,
+    marginRight: 10,
   },
-  ratingRow: {
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
+    backgroundColor: '#FFF9C4',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  ratingText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 5,
-    color: '#FFC107',
+  rating: {
+    marginLeft: 4,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#F57F17',
   },
-  infoRow: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
   },
   address: {
     fontSize: 16,
-    color: '#333',
+    color: '#666',
+    marginLeft: 6,
+    flex: 1,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 20,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 15,
-    marginBottom: 8,
+    marginBottom: 12,
+    color: '#333',
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
     color: '#444',
-    marginBottom: 10,
+    marginBottom: 20,
   },
-  buttonContainer: {
-    marginTop: 20,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
-    marginBottom: 15,
+  aiButton: {
+    flexDirection: 'row',
+    backgroundColor: '#9C27B0',
+    paddingVertical: 14,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#9C27B0',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  reserveButton: {
-      marginTop: 20,
-      marginBottom: 30,
-  }
+  aiButtonDisabled: {
+    opacity: 0.7,
+  },
+  aiButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  bookButton: {
+    flexDirection: 'row',
+    backgroundColor: '#25D366',
+    paddingVertical: 16,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#25D366',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  bookButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
-
-export default DetailsScreen;
