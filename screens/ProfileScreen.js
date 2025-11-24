@@ -1,20 +1,40 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, Platform, StatusBar, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: logout
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.avatarContainer}>
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde' }} 
+            source={{ uri: user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde' }} 
             style={styles.avatar} 
           />
           <View style={styles.statusBadge} />
         </View>
         
-        <Text style={styles.name}>Alex Traveler</Text>
-        <Text style={styles.bio}>Explorer of hidden gems & coffee enthusiast ☕️</Text>
+        <Text style={styles.name}>{user?.name || 'Guest User'}</Text>
+        <Text style={styles.bio}>{user?.bio || 'Welcome to the app!'}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
@@ -35,15 +55,30 @@ export default function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>My Account</Text>
-          <View style={styles.menuItem}>
+          
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
+            <Ionicons name="person-outline" size={20} color="#667eea" />
             <Text style={styles.menuText}>Edit Profile</Text>
-          </View>
-          <View style={styles.menuItem}>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Ionicons name="settings-outline" size={20} color="#667eea" />
             <Text style={styles.menuText}>Settings</Text>
-          </View>
-          <View style={styles.menuItem}>
-            <Text style={styles.menuText}>Log Out</Text>
-          </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={20} color="#f44336" />
+            <Text style={[styles.menuText, { color: '#f44336' }]}>Log Out</Text>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -94,6 +129,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  email: {
+    fontSize: 14,
+    color: '#999',
     marginBottom: 24,
   },
   statsContainer: {
@@ -117,7 +157,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2196F3',
+    color: '#667eea',
     marginBottom: 4,
   },
   statLabel: {
@@ -146,12 +186,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
   menuText: {
+    flex: 1,
     fontSize: 16,
     color: '#444',
+    marginLeft: 12,
   },
 });

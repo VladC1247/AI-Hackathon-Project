@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Platform, StatusBar } from 'react-native';
-import MapView, { Marker, UrlTile } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 import LocationCard from '../components/LocationCard';
+import MapComponent from '../components/MapComponent';
 import locationsData from '../data/locations.json';
 
 export default function HomeScreen() {
@@ -53,33 +53,10 @@ export default function HomeScreen() {
         />
       ) : (
         <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: 46.0, // Center of Romania roughly
-              longitude: 25.0,
-              latitudeDelta: 5.0,
-              longitudeDelta: 5.0,
-            }}
-          >
-             <UrlTile
-                urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maximumZ={19}
-                flipY={false}
-              />
-            {locations.map((location, index) => (
-              <Marker
-                key={index}
-                coordinate={{
-                  latitude: location.coordinates.lat,
-                  longitude: location.coordinates.long,
-                }}
-                title={location.name}
-                description={location.short_description}
-                onCalloutPress={() => handleLocationPress(location)}
-              />
-            ))}
-          </MapView>
+          <MapComponent 
+            locations={locations} 
+            onMarkerPress={handleLocationPress}
+          />
         </View>
       )}
     </SafeAreaView>
@@ -125,9 +102,5 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
-  },
-  map: {
-    width: '100%',
-    height: '100%',
   },
 });
