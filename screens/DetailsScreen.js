@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Linking, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// OpenRouter API key (provided by user)
-const OPENROUTER_API_KEY = "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";
+// eslint-disable-next-line import/no-unresolved
+import { OPENROUTER_API_KEY } from '@env';
 
 export default function DetailsScreen({ route }) {
   const { location } = route.params;
@@ -49,7 +48,7 @@ Current description: "${location.short_description}"`;
           'X-Title': 'AI-Hackathon-App',
         },
         body: JSON.stringify({
-          model: 'openrouter/mistralai/mistral-nemo',
+          model: 'mistralai/mistral-7b-instruct',
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7,
         }),
