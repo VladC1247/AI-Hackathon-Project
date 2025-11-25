@@ -1,5 +1,6 @@
 [
   {
+    "id": 1,
     "name": "The Literary Coffee House 'Citadel'",
     "address": "Str. Academiei, Nr. 15, Bucharest",
     "coordinates": {
@@ -11,6 +12,7 @@
     "rating": 4.8
   },
   {
+    "id": 2,
     "name": "Restaurant 'The Old Inn'",
     "address": "Piața Unirii, Nr. 4, Cluj-Napoca",
     "coordinates": {
@@ -22,6 +24,7 @@
     "rating": 4.5
   },
   {
+    "id": 3,
     "name": "The Global Wok Bistro",
     "address": "Bulevardul Eroilor, Nr. 8, Timișoara",
     "coordinates": {
@@ -33,6 +36,7 @@
     "rating": 4.2
   },
   {
+    "id": 4,
     "name": "Café 'New World'",
     "address": "Str. Lăpușneanu, Nr. 12, Iași",
     "coordinates": {
@@ -44,6 +48,7 @@
     "rating": 4.7
   },
   {
+    "id": 5,
     "name": "Pizzeria 'Il Drago'",
     "address": "Str. Nicolae Bălcescu, Nr. 20, Brașov",
     "coordinates": {
@@ -55,6 +60,7 @@
     "rating": 4.6
   },
   {
+    "id": 6,
     "name": "Vegan Restaurant 'The Green Garden'",
     "address": "Splaiul Independenței, Nr. 300, Bucharest",
     "coordinates": {
@@ -66,6 +72,7 @@
     "rating": 4.9
   },
   {
+    "id": 7,
     "name": "Coffee Shop 'By The Faculty'",
     "address": "Str. Observatorului, Nr. 17, Cluj-Napoca",
     "coordinates": {
@@ -77,6 +84,7 @@
     "rating": 4.0
   },
   {
+    "id": 8,
     "name": "Burger Shack",
     "address": "Calea Moșilor, Nr. 250, Bucharest",
     "coordinates": {
@@ -88,6 +96,7 @@
     "rating": 4.4
   },
   {
+    "id": 9,
     "name": "Tea House 'Sunset'",
     "address": "Str. George Enescu, Nr. 3, Sibiu",
     "coordinates": {
@@ -99,6 +108,7 @@
     "rating": 4.7
   },
   {
+    "id": 10,
     "name": "Restaurant Pescaresc 'The Sea'",
     "address": "Bulevardul Mamaia, Nr. 200, Constanța",
     "coordinates": {
@@ -110,6 +120,7 @@
     "rating": 4.5
   },
   {
+    "id": 11,
     "name": "Bistro 'At The Forest'",
     "address": "Aleea Parcului, Nr. 7, Oradea",
     "coordinates": {
@@ -121,6 +132,7 @@
     "rating": 4.3
   },
   {
+    "id": 12,
     "name": "Gaming Coffee Shop 'Restart'",
     "address": "Strada Vasile Alecsandri, Nr. 5, Galați",
     "coordinates": {
@@ -132,6 +144,7 @@
     "rating": 4.1
   },
   {
+    "id": 13,
     "name": "Trattoria 'Bella Vita'",
     "address": "Bulevardul Carol I, Nr. 18, Craiova",
     "coordinates": {
@@ -143,6 +156,7 @@
     "rating": 4.6
   },
   {
+    "id": 14,
     "name": "Bread and Coffee",
     "address": "Strada Republicii, Nr. 10, Ploiești",
     "coordinates": {
@@ -154,6 +168,7 @@
     "rating": 4.8
   },
   {
+    "id": 15,
     "name": "Fast-Food 'Döner King'",
     "address": "Calea Șagului, Nr. 55, Timișoara",
     "coordinates": {
@@ -165,6 +180,7 @@
     "rating": 3.9
   },
   {
+    "id": 16,
     "name": "Restaurant 'The Citadel'",
     "address": "Strada Mureșenilor, Nr. 1, Târgu Mureș",
     "coordinates": {
@@ -176,6 +192,7 @@
     "rating": 4.4
   },
   {
+    "id": 17,
     "name": "Smoothie Bar 'Energy'",
     "address": "Bulevardul 1 Decembrie 1918, Nr. 100, Alba Iulia",
     "coordinates": {
@@ -187,6 +204,7 @@
     "rating": 4.9
   },
   {
+    "id": 18,
     "name": "Restaurant 'Grandma's House'",
     "address": "Strada Republicii, Nr. 45, Brașov",
     "coordinates": {
@@ -198,6 +216,7 @@
     "rating": 4.3
   },
   {
+    "id": 19,
     "name": "Irish Pub 'The Shamrock'",
     "address": "Strada Universității, Nr. 9, Iași",
     "coordinates": {
@@ -209,6 +228,7 @@
     "rating": 4.5
   },
   {
+    "id": 20,
     "name": "Coffee Shop 'Zen'",
     "address": "Strada Dorobanților, Nr. 80, Cluj-Napoca",
     "coordinates": {

@@ -201,6 +201,19 @@ export const checkFavorite = async (userId, locationId) => {
   }
 };
 
+export const getUserFavorites = async (userId) => {
+  try {
+    const favorites = await db.getAllAsync(
+      'SELECT location_id FROM favorites WHERE user_id = ?',
+      [userId]
+    );
+    return favorites.map(f => f.location_id);
+  } catch (error) {
+    console.error('Get user favorites failed:', error);
+    return [];
+  }
+};
+
 // Reviews
 export const addReview = async (userId, locationId, rating, comment) => {
   try {

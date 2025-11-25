@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Platform, StatusBar, TextInput, Modal, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Platform, StatusBar, TextInput, Modal, ScrollView, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 import LocationCard from '../components/LocationCard';
 import MapComponent from '../components/MapComponent';
 import locationsData from '../data/locatii.json';
+import { useAuth } from '../context/AuthContext';
+import { getUserFavorites } from '../utils/database';
 
 export default function HomeScreen() {
   const [viewMode, setViewMode] = useState('list');
@@ -17,8 +19,11 @@ export default function HomeScreen() {
   // Filter states
   const [selectedCounty, setSelectedCounty] = useState('All');
   const [selectedRating, setSelectedRating] = useState('All');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [userFavorites, setUserFavorites] = useState([]);
   
   const navigation = useNavigation();
+  const { user } = useAuth();
 
   // Extract county from address (3rd parameter after splitting by comma)
   const getCountyFromAddress = (address) => {
@@ -38,9 +43,20 @@ export default function HomeScreen() {
     setFilteredLocations(locationsData);
   }, []);
 
+  // Fetch favorites when screen comes into focus or user changes
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        getUserFavorites(user.id).then(setUserFavorites);
+      } else {
+        setUserFavorites([]);
+      }
+    }, [user])
+  );
+
   useEffect(() => {
     applyFilters();
-  }, [searchQuery, selectedCounty, selectedRating, locations]);
+  }, [searchQuery, selectedCounty, selectedRating, showFavoritesOnly, userFavorites, locations]);
 
   const applyFilters = () => {
     let filtered = [...locations];
@@ -64,6 +80,11 @@ export default function HomeScreen() {
       filtered = filtered.filter(loc => loc.rating >= minRating);
     }
 
+    // Favorites filter
+    if (showFavoritesOnly) {
+      filtered = filtered.filter(loc => userFavorites.includes(loc.id));
+    }
+
     setFilteredLocations(filtered);
   };
 
@@ -78,6 +99,7 @@ export default function HomeScreen() {
   const clearFilters = () => {
     setSelectedCounty('All');
     setSelectedRating('All');
+    setShowFavoritesOnly(false);
     setSearchQuery('');
   };
 
@@ -85,6 +107,7 @@ export default function HomeScreen() {
     let count = 0;
     if (selectedCounty !== 'All') count++;
     if (selectedRating !== 'All') count++;
+    if (showFavoritesOnly) count++;
     return count;
   };
 
@@ -158,7 +181,7 @@ export default function HomeScreen() {
         <FlatList
           data={filteredLocations}
           renderItem={renderListItem}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
@@ -194,6 +217,17 @@ export default function HomeScreen() {
             </View>
 
             <ScrollView style={styles.modalBody}>
+              {/* Favorites Filter */}
+              <View style={styles.switchContainer}>
+                <Text style={styles.filterLabel}>Show Favorites Only</Text>
+                <Switch
+                  value={showFavoritesOnly}
+                  onValueChange={setShowFavoritesOnly}
+                  trackColor={{ false: '#767577', true: '#667eea' }}
+                  thumbColor={showFavoritesOnly ? '#fff' : '#f4f3f4'}
+                />
+              </View>
+
               {/* County Filter */}
               <Text style={styles.filterLabel}>County</Text>
               <View style={styles.filterOptions}>
@@ -415,6 +449,12 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 16,
     marginBottom: 12,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   filterOptions: {
     flexDirection: 'row',
