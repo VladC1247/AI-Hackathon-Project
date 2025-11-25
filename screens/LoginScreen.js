@@ -19,13 +19,13 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    const result = login(email, password);
+    const result = await login(email, password);
     if (!result.success) {
       Alert.alert('Login Failed', result.error);
     }

@@ -29,7 +29,8 @@ export default function HomeScreen() {
   // Get unique counties from locations
   const getUniqueCounties = () => {
     const counties = locations.map(loc => getCountyFromAddress(loc.address));
-    return ['All', ...new Set(counties)].sort();
+    const uniqueCounties = [...new Set(counties)].sort();
+    return ['All', ...uniqueCounties];
   };
 
   useEffect(() => {

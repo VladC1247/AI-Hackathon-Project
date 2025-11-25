@@ -21,13 +21,13 @@ export default function EditProfileScreen({ navigation }) {
   const [bio, setBio] = useState(user?.bio || '');
   const [avatar, setAvatar] = useState(user?.avatar || '');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert('Error', 'Name is required');
       return;
     }
 
-    const result = updateProfile({ name, bio, avatar });
+    const result = await updateProfile({ name, bio, avatar });
     if (result.success) {
       Alert.alert('Success', 'Profile updated successfully!');
       navigation.goBack();

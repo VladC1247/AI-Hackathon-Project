@@ -1,72 +1,233 @@
-// Mock database - in production, this would be a real backend
-const users = [
-  {
-    id: 1,
-    email: 'admin@hackathon.ro',
-    password: 'admin123',
-    name: 'Alex Traveler',
-    bio: 'Explorer of hidden gems & coffee enthusiast ☕️',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde',
-  },
-  {
-    id: 2,
-    email: 'user@test.com',
-    password: 'test123',
-    name: 'Maria Popescu',
-    bio: 'Food lover and adventure seeker 🌍',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330',
-  },
-];
+import * as SQLite from 'expo-sqlite';
 
-export const authenticateUser = (email, password) => {
-  const user = users.find(u => u.email === email && u.password === password);
-  if (user) {
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+// Initialize database using the modern synchronous API
+const db = SQLite.openDatabaseSync('hackathon.db');
+
+export const initDatabase = async () => {
+  try {
+    // Enable WAL mode and create tables
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE,
+        password TEXT,
+        name TEXT,
+        bio TEXT,
+        avatar TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS reviews (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        location_id INTEGER,
+        rating REAL,
+        comment TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      );
+
+      CREATE TABLE IF NOT EXISTS favorites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        location_id INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        UNIQUE(user_id, location_id)
+      );
+    `);
+
+    console.log('Database initialized');
+
+    // Check if admin exists
+    const adminEmail = 'admin@hackathon.ro';
+    const admin = await db.getFirstAsync('SELECT * FROM users WHERE email = ?', [adminEmail]);
+
+    if (!admin) {
+      await db.runAsync(
+        'INSERT INTO users (name, email, password, bio, avatar) VALUES (?, ?, ?, ?, ?)',
+        [
+          'Alex Traveler',
+          adminEmail,
+          'admin123',
+          'Explorer of hidden gems & coffee enthusiast ☕️',
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'
+        ]
+      );
+      console.log('Admin user created');
+      
+      // Get admin ID
+      const adminUser = await db.getFirstAsync('SELECT id FROM users WHERE email = ?', [adminEmail]);
+      
+      // Seed some dummy data for admin
+      if (adminUser) {
+        await db.runAsync('INSERT OR IGNORE INTO favorites (user_id, location_id) VALUES (?, ?)', [adminUser.id, 1]);
+        await db.runAsync('INSERT OR IGNORE INTO favorites (user_id, location_id) VALUES (?, ?)', [adminUser.id, 2]);
+        await db.runAsync('INSERT OR IGNORE INTO reviews (user_id, location_id, rating, comment) VALUES (?, ?, ?, ?)', [adminUser.id, 1, 5, 'Amazing place!']);
+      }
+    }
+  } catch (error) {
+    console.error('Database initialization failed:', error);
   }
-  return null;
 };
 
-export const getUserById = (id) => {
-  const user = users.find(u => u.id === id);
-  if (user) {
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+export const authenticateUser = async (email, password) => {
+  try {
+    const user = await db.getFirstAsync(
+      'SELECT * FROM users WHERE email = ? AND password = ?',
+      [email, password]
+    );
+    
+    if (user) {
+      const { password: _, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    }
+    return null;
+  } catch (error) {
+    console.error('Authentication failed:', error);
+    return null;
   }
-  return null;
 };
 
-export const updateUser = (id, updates) => {
-  const userIndex = users.findIndex(u => u.id === id);
-  if (userIndex !== -1) {
-    users[userIndex] = { ...users[userIndex], ...updates };
-    const { password: _, ...userWithoutPassword } = users[userIndex];
-    return userWithoutPassword;
+export const getUserById = async (id) => {
+  try {
+    const user = await db.getFirstAsync('SELECT * FROM users WHERE id = ?', [id]);
+    
+    if (user) {
+      const { password: _, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    }
+    return null;
+  } catch (error) {
+    console.error('Get user failed:', error);
+    return null;
   }
-  return null;
 };
 
-export const createUser = (name, email, password) => {
-  // Check if email already exists
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
-    return { success: false, error: 'Email already registered' };
+export const updateUser = async (id, updates) => {
+  try {
+    const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
+    const values = Object.values(updates);
+    
+    if (fields.length === 0) return null;
+
+    await db.runAsync(
+      `UPDATE users SET ${fields} WHERE id = ?`,
+      [...values, id]
+    );
+    
+    return await getUserById(id);
+  } catch (error) {
+    console.error('Update user failed:', error);
+    return null;
   }
+};
 
-  // Create new user
-  const newUser = {
-    id: users.length + 1,
-    email,
-    password,
-    name,
-    bio: 'New explorer 🌍',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde',
-  };
+export const createUser = async (name, email, password, bio = '', avatar = '') => {
+  try {
+    // Check if email exists
+    const existing = await db.getFirstAsync('SELECT * FROM users WHERE email = ?', [email]);
+    if (existing) {
+      return { success: false, error: 'Email already registered' };
+    }
 
-  users.push(newUser);
-  
-  // Return user without password
-  const { password: _, ...userWithoutPassword } = newUser;
-  return { success: true, user: userWithoutPassword };
+    const result = await db.runAsync(
+      'INSERT INTO users (name, email, password, bio, avatar) VALUES (?, ?, ?, ?, ?)',
+      [name, email, password, bio, avatar]
+    );
+
+    const newUser = await getUserById(result.lastInsertRowId);
+    return { success: true, user: newUser };
+  } catch (error) {
+    console.error('Create user failed:', error);
+    return { success: false, error: 'Database error' };
+  }
+};
+
+// User stats
+export const getUserStats = async (userId) => {
+  try {
+    const reviews = await db.getFirstAsync('SELECT COUNT(*) as count FROM reviews WHERE user_id = ?', [userId]);
+    const favorites = await db.getFirstAsync('SELECT COUNT(*) as count FROM favorites WHERE user_id = ?', [userId]);
+
+    return {
+      reviews: reviews?.count || 0,
+      favorites: favorites?.count || 0
+    };
+  } catch (error) {
+    console.error('Get user stats failed:', error);
+    return { reviews: 0, favorites: 0 };
+  }
+};
+
+// Favorites
+export const toggleFavorite = async (userId, locationId) => {
+  try {
+    const existing = await db.getFirstAsync(
+      'SELECT * FROM favorites WHERE user_id = ? AND location_id = ?',
+      [userId, locationId]
+    );
+
+    if (existing) {
+      await db.runAsync(
+        'DELETE FROM favorites WHERE user_id = ? AND location_id = ?',
+        [userId, locationId]
+      );
+      return false; // Removed
+    } else {
+      await db.runAsync(
+        'INSERT INTO favorites (user_id, location_id) VALUES (?, ?)',
+        [userId, locationId]
+      );
+      return true; // Added
+    }
+  } catch (error) {
+    console.error('Toggle favorite failed:', error);
+    return null;
+  }
+};
+
+export const checkFavorite = async (userId, locationId) => {
+  try {
+    const existing = await db.getFirstAsync(
+      'SELECT * FROM favorites WHERE user_id = ? AND location_id = ?',
+      [userId, locationId]
+    );
+    return !!existing;
+  } catch (error) {
+    console.error('Check favorite failed:', error);
+    return false;
+  }
+};
+
+// Reviews
+export const addReview = async (userId, locationId, rating, comment) => {
+  try {
+    await db.runAsync(
+      'INSERT INTO reviews (user_id, location_id, rating, comment) VALUES (?, ?, ?, ?)',
+      [userId, locationId, rating, comment]
+    );
+    return true;
+  } catch (error) {
+    console.error('Add review failed:', error);
+    return false;
+  }
+};
+
+export const getLocationReviews = async (locationId) => {
+  try {
+    const reviews = await db.getAllAsync(
+      `SELECT r.*, u.name as user_name, u.avatar as user_avatar 
+       FROM reviews r 
+       JOIN users u ON r.user_id = u.id 
+       WHERE r.location_id = ? 
+       ORDER BY r.created_at DESC`,
+      [locationId]
+    );
+    return reviews;
+  } catch (error) {
+    console.error('Get location reviews failed:', error);
+    return [];
+  }
 };

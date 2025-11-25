@@ -23,7 +23,7 @@ export default function SignUpScreen({ navigation }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signup } = useAuth();
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!name || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
@@ -45,7 +45,7 @@ export default function SignUpScreen({ navigation }) {
       return;
     }
 
-    const result = signup(name, email, password);
+    const result = await signup(name, email, password);
     if (!result.success) {
       Alert.alert('Sign Up Failed', result.error);
     }

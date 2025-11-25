@@ -19,17 +19,20 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.uberfritz.AIHackathonApp"
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-    
     "extra": {
-      "geminiApiKey": "$GEMINI_API_KEY"
+      "geminiApiKey": "$GEMINI_API_KEY",
+      "router": {},
+      "eas": {
+        "projectId": "2aae8c29-dedc-4569-993d-ac38e165f91d"
+      }
     },
-    
     "plugins": [
       "expo-router",
       [

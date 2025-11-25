@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Image, SafeAreaView, Platform, StatusBar, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { getUserStats } from '../utils/database';
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
+  const [stats, setStats] = useState({ reviews: 0, favorites: 0 });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.id) {
+        getUserStats(user.id).then(setStats);
+      }
+    }, [user?.id])
+  );
 
   const handleLogout = () => {
     Alert.alert(
@@ -38,18 +49,13 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>12</Text>
+            <Text style={styles.statNumber}>{stats.reviews}</Text>
             <Text style={styles.statLabel}>Reviews</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>5</Text>
+            <Text style={styles.statNumber}>{stats.favorites}</Text>
             <Text style={styles.statLabel}>Favorites</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Bookings</Text>
           </View>
         </View>
 

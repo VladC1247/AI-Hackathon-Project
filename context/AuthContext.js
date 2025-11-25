@@ -1,13 +1,22 @@
-import React, { createContext, useState, useContext } from 'react';
-import { authenticateUser, updateUser as updateUserInDb, createUser } from '../utils/database';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authenticateUser, updateUser as updateUserInDb, createUser, initDatabase } from '../utils/database';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isReady, setIsReady] = useState(false);
 
-  const login = (email, password) => {
-    const authenticatedUser = authenticateUser(email, password);
+  useEffect(() => {
+    const init = async () => {
+      await initDatabase();
+      setIsReady(true);
+    };
+    init();
+  }, []);
+
+  const login = async (email, password) => {
+    const authenticatedUser = await authenticateUser(email, password);
     if (authenticatedUser) {
       setUser(authenticatedUser);
       return { success: true };
@@ -15,8 +24,8 @@ export const AuthProvider = ({ children }) => {
     return { success: false, error: 'Invalid email or password' };
   };
 
-  const signup = (name, email, password) => {
-    const result = createUser(name, email, password);
+  const signup = async (name, email, password) => {
+    const result = await createUser(name, email, password);
     if (result.success) {
       setUser(result.user);
       return { success: true };
@@ -28,9 +37,9 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  const updateProfile = (updates) => {
+  const updateProfile = async (updates) => {
     if (user) {
-      const updatedUser = updateUserInDb(user.id, updates);
+      const updatedUser = await updateUserInDb(user.id, updates);
       if (updatedUser) {
         setUser(updatedUser);
         return { success: true };
@@ -38,6 +47,10 @@ export const AuthProvider = ({ children }) => {
     }
     return { success: false, error: 'Failed to update profile' };
   };
+
+  if (!isReady) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, signup, logout, updateProfile }}>
