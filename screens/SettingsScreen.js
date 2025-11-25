@@ -65,7 +65,7 @@ export default function SettingsScreen({ navigation }) {
             <Ionicons name="sparkles-outline" size={24} color="#667eea" />
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>AI Powered</Text>
-              <Text style={styles.infoValue}>Google Gemini API</Text>
+              <Text style={styles.infoValue}>OpenRouter API (Mistral 7B)</Text>
             </View>
           </View>
         </View>

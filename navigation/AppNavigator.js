@@ -12,6 +12,7 @@ import DetailsScreen from '../screens/DetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ChatScreen from '../screens/ChatScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -25,6 +26,8 @@ function MainTabs() {
 
           if (route.name === 'Explore') {
             iconName = focused ? 'map' : 'map-outline';
+          } else if (route.name === 'Assistant') {
+            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -37,6 +40,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Explore" component={HomeScreen} />
+      <Tab.Screen name="Assistant" component={ChatScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
